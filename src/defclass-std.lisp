@@ -11,6 +11,7 @@
            *default-std*
            *with-prefix*
            class/std
+           print-object/std
            printing-unreadably)
   (:documentation "Main (and only) project package."))
 (in-package defclass-std)
