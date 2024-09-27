@@ -546,7 +546,17 @@ C-c C-y =>
 
 This doesn't work inside a `defclass/std` form, you get "not in a function definition".
 
-It's too handy, we'll need a contribution somewhere.
+Likewise, when the point is on a class name, we can call `M-x
+slime-export-class`. This adds the class name and all the
+accessors/readers/writers symbols to the `:export` clause of your
+package. It doesn't work with a `defclass/std` form.
+
+Those are too handy, we'll need a contribution somewhere.
+
+Or, whenever faced with these limitations, just transform your
+defclass/std to a regular defclass. You can see the maroexpansion with
+`C-c M` (`slime-macroexpand-1`) and copy-paste the expansion (followed
+by M-x downcase-region …).
 
 
 ## Dependencies
@@ -577,6 +587,7 @@ Tests are ran with [Travis CI](https://travis-ci.org/EuAndreh/defclass-std) and 
 ## Authors
 + [André Miranda](https://github.com/EuAndreh)
 + [Joram Schrijver](https://github.com/jorams)
++ lisp-maintainers
 
 ## License
 [LLGPL](https://tldrlegal.com/license/lisp-lesser-general-public-license#fulltext).
