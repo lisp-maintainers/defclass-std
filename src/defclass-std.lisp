@@ -7,12 +7,12 @@
   (:import-from anaphora
                 aif
                 it)
-  (:export defclass/std
-           *default-std*
-           *with-prefix*
-           class/std
-           print-object/std
-           printing-unreadably)
+  (:export #:defclass/std
+           #:*default-std*
+           #:*with-prefix*
+           #:class/std
+           #:print-object/std
+           #:printing-unreadably)
   (:documentation "Main (and only) project package."))
 (in-package defclass-std)
 
