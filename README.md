@@ -17,6 +17,12 @@ But with every `defclass` usually comes a `print-object` method. So we
 provide a simple `print-object/std` macro that defines a
 `print-object` method and prints all the class slots.
 
+**About this fork**:
+
+- the [original project](https://github.com/EuAndreh/defclass-std) by EuAndreh is archived :/
+- added `print-object/std` (<2024-09-27>)
+- added docstrings, organized the README
+
 
 ## Usage
 
