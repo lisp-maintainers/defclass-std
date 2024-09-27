@@ -72,10 +72,41 @@ have generic methods (accessors) to get and set the slots:
 ;; => NIL (instead of unbound slot error)
 ~~~
 
+### defclass/std vs defclass syntax
+
+Don't rush, there's is a little syntax difference, look:
+
+~~~lisp
+(defclass example ()
+  (slot1 slot2 slot3))
+~~~
+
+VS
+
+~~~lisp
+(defclass/std example ()
+  ((slot1 slot2 slot3)))
+~~~
+
+There is an extra level of parentheses, as if you were already giving slot options as in:
+
+~~~lisp
+(defclass example ()
+  ((slot1 :initarg :slot1)
+   (slot2 :initarg slot2)))
+~~~
 
 ### defclass/std options
 
-   If you want to change the `:initform` value, you can use the `:std` option:
+To declare the **type** of a slot or to add **documentation** to a slot, use `:type` and `:doc`, respectively.
+
+~~~lisp
+(defclass/std example-doc ()
+  ((slot1 :doc "doc1")
+   (slot2 :doc "doc2")))
+~~~
+
+   If you want to **change the `:initform` value**, you can use the `:std` option:
 ```lisp
 (defclass std-test ()
   ((slot :std 1)))
@@ -86,7 +117,7 @@ have generic methods (accessors) to get and set the slots:
   ((SLOT :ACCESSOR SLOT :INITARG :SLOT :INITFORM 1)))
 ```
 
-If you want to omit the `:initform` option, you have two ways:
+If you want to **omit the `:initform` option,** you have two ways:
 
    1. Use `:std :unbound` explicitly
    2. Change the value of `*default-std*`. By default it is set to `T`, so, when the `:std` option is omitted, `:initform` is set to nil. When `*default-std*` is set to nil, `:initform` is omitted when `:std` is omitted.
@@ -105,6 +136,8 @@ If you want to omit the `:initform` option, you have two ways:
 (DEFCLASS OMIT-STD ()
   ((SLOT :ACCESSOR SLOT :INITARG :SLOT)))
 ```
+
+**Enable or disable accessors, readers, writers and initargs**.
 
    `:a`, `:i`, `:r` and `:w` are connected: when all of them are omitted, `:a` and `:i` are inserted by default.
 
@@ -134,7 +167,7 @@ If you want to omit the `:initform` option, you have two ways:
 
    If you want to use `:r` and `:w` together, use `:a` instead, or you'll get an error. The same stands for `:a` + `:r` and `:a` + `:w`.
 
-   You can choose to add the class name as a prefix for the acessor/reader/writer function. Just put `:with` or `:with-prefix` option.
+   You can choose to **add the class name as a prefix** for the acessor/reader/writer function. Just put `:with` or `:with-prefix` option.
 
 ```lisp
 (defclass/std example ()
@@ -148,28 +181,9 @@ If you want to omit the `:initform` option, you have two ways:
    (SLOT2 :ACCESSOR SLOT2 :INITARG :SLOT2 :INITFORM NIL)))
 ```
 
-   To make a slot static (class-allocated), use `:@@` or `:static`.
+   To make a slot **static (class-allocated)**, use `:@@` or `:static`.
 
-   To declare the type of a slot or to add documentation to a slot, use `:type` and `:doc`, respectively.
-
-   For real quick, concise, dense and standard class definitions, use `CLASS/STD`:
-```lisp
-(class/std example slot1 slot2 slot3)
-
-; which expands to:
-
-(DEFCLASS/STD EXAMPLE ()
-  ((SLOT1 SLOT2 SLOT3)))
-
-; which expands to:
-
-(DEFCLASS EXAMPLE ()
-  ((SLOT1 :ACCESSOR SLOT1 :INITARG :SLOT1 :INITFORM NIL)
-   (SLOT2 :ACCESSOR SLOT2 :INITARG :SLOT2 :INITFORM NIL)
-   (SLOT3 :ACCESSOR SLOT3 :INITARG :SLOT3 :INITFORM NIL)))
-```
-
-   You can also add the prefix by default by changing the value of the `*with-prefix*` special variable (defaults to `nil`):
+   You can also **add the prefix by default** by changing the value of the `*with-prefix*` special variable (defaults to `nil`):
 ```lisp
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (setf *with-prefix* t))

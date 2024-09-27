@@ -153,16 +153,17 @@
 
 (defun process-slots (env direct-slots classname)
   "Returns the expanded list of DIRECT-SLOTS."
-  (let ((processed (mapcar (lambda (line)
-            (let ((prefix (if (or (member :with-prefix line)
-                                  (member :with line)
-                                  *with-prefix*)
-                              (concatenate 'string (string classname) "-")
-                              ""))
-                  (split-kws-line (split-fusioned-keywords line)))
-              (check-for-repeated-keywords split-kws-line)
-              (replace-keywords env split-kws-line prefix)))
-          direct-slots)))
+  (let ((processed (mapcar
+                    (lambda (line)
+                      (let ((prefix (if (or (member :with-prefix line)
+                                            (member :with line)
+                                            *with-prefix*)
+                                        (concatenate 'string (string classname) "-")
+                                        ""))
+                            (split-kws-line (split-fusioned-keywords line)))
+                        (check-for-repeated-keywords split-kws-line)
+                        (replace-keywords env split-kws-line prefix)))
+                    direct-slots)))
     (reduce #'append processed)))
 
 (defmacro class/std (name &body defaulted-slots)
