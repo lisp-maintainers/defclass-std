@@ -243,6 +243,26 @@ is equivalent to
    (slotn :accessor slotn :initarg :slotn :initform nil)))
 ~~~
 
+## class/std vs defstruct
+
+structures are defined with:
+
+~~~lisp
+(defstruct structexample slot1 slot2 slot3)
+~~~
+
+they are created with `make-structexample` and accessor functions are
+named with the struct name prefix, as `structexample-slot1`.
+
+`class/std` has the same creation syntax:
+
+~~~lisp
+(class/std classname slot1 slot2 slot3)
+~~~
+
+and doesn't follow the naming of structs by default.
+
+
 ## print-object/std
 
 Given a class
