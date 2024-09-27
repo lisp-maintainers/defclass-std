@@ -126,7 +126,27 @@
 
 (defmacro defclass/std (name direct-superclasses direct-slots &rest options
                         &environment env)
-  "Shortcut macro to the DEFCLASS macro. See README for syntax and usage."
+  "Shortcut macro to the DEFCLASS macro.
+
+  (defclass/std example ()
+    ((slot1 slot2 slot3)))
+
+  expands to:
+
+  (DEFCLASS EXAMPLE ()
+    ((SLOT1 :ACCESSOR SLOT1 :INITARG :SLOT1 :INITFORM NIL)
+    (SLOT2 :ACCESSOR SLOT2 :INITARG :SLOT2 :INITFORM NIL)
+    (SLOT3 :ACCESSOR SLOT3 :INITARG :SLOT3 :INITFORM NIL)))
+
+  Each slot definition accepts options:
+
+    :std 1 => changes the :initform to 1. It can be :unbound.
+    :with or :with-prefix => creates accessors with the class name as prefix.
+
+  See the README for more.
+
+  See also `class/std' and `print-object/std'.
+  "
   `(defclass ,name ,direct-superclasses
      ,(process-slots env direct-slots name)
      ,@options))
@@ -146,7 +166,22 @@
     (reduce #'append processed)))
 
 (defmacro class/std (name &body defaulted-slots)
-  "Shortcut macro to the DEFCLASS/STD macro."
+  "The most concise shortcut macro to DEFCLASS.
+
+  (class/std example slot1 slot2 slot3)
+
+  expands to:
+
+  (DEFCLASS/STD EXAMPLE ()
+    ((SLOT1 SLOT2 SLOT3)))
+
+  which expands to:
+
+  (DEFCLASS EXAMPLE ()
+    ((SLOT1 :ACCESSOR SLOT1 :INITARG :SLOT1 :INITFORM NIL)
+    (SLOT2 :ACCESSOR SLOT2 :INITARG :SLOT2 :INITFORM NIL)
+    (SLOT3 :ACCESSOR SLOT3 :INITARG :SLOT3 :INITFORM NIL)))
+"
   `(defclass/std ,name ()
      ((,@defaulted-slots))))
 
