@@ -1,8 +1,9 @@
 # defclass-std - Standard class writing macro
-[![Quicklisp](http://quickdocs.org/badge/defclass-std.svg)](http://quickdocs.org/defclass-std/)
-[![Build Status](https://travis-ci.org/EuAndreh/defclass-std.svg?branch=master)](https://travis-ci.org/EuAndreh/defclass-std)
-[![Circle CI](https://circleci.com/gh/EuAndreh/defclass-std.svg?style=svg)](https://circleci.com/gh/EuAndreh/defclass-std)
-[![Coverage Status](https://coveralls.io/repos/EuAndreh/defclass-std/badge.svg?branch=master)](https://coveralls.io/r/EuAndreh/defclass-std?branch=master)
+
+<!-- [![Quicklisp](http://quickdocs.org/badge/defclass-std.svg)](http://quickdocs.org/defclass-std/) -->
+<!-- [![Build Status](https://travis-ci.org/EuAndreh/defclass-std.svg?branch=master)](https://travis-ci.org/EuAndreh/defclass-std) -->
+<!-- [![Circle CI](https://circleci.com/gh/EuAndreh/defclass-std.svg?style=svg)](https://circleci.com/gh/EuAndreh/defclass-std) -->
+<!-- [![Coverage Status](https://coveralls.io/repos/EuAndreh/defclass-std/badge.svg?branch=master)](https://coveralls.io/r/EuAndreh/defclass-std?branch=master) -->
 
 Most times, when sketching out a new class, I often commit lots of typos and forget to add an `:initform`.
 
@@ -10,15 +11,28 @@ Also, the throw away class designed in the beginning may thrive and stay the sam
 
 This simple macro atempts to give a very DRY and succint interface to the common `DEFCLASS` form. The goal is to offer most of the capabilities of a normal `DEFCLASS`, only in a more compact way.
 
-Everything compiles down to `DEFCLASS`.
+Everything compiles down to `defclass`.
+
+But with every `defclass` usually comes a `print-object` method. So we
+provide a simple `print-object/std` macro that defines a
+`print-object` method and prints all the class slots.
+
 
 ## Usage
+
+We provide `defclass/std`, which is close to `defclass`, and
+`class/std`, which is even shorter and close to `defstruct`.
+
+First, install the library and import the `defclass/std` symbol:
+
 ```lisp
 * (ql:quickload :defclass-std)
 ; => (:DEFCLASS-STD)
 * (import 'defclass-std:defclass/std)
 ; => T
 ```
+
+### defclass/std
 
 A simple class defined with `DEFCLASS/STD` looks like this:
 ```lisp
@@ -37,6 +51,24 @@ A simple class defined with `DEFCLASS/STD` looks like this:
    2. `:initarg` + the name of the slot
    3. `:initform nil`
 
+So, with this short definition, you have `:initargs` defined for you,
+all `:initform`s are set to NIL instead of being unbound, and you now
+have generic methods (accessors) to get and set the slots:
+
+~~~lisp
+(defparameter *example1* (make-instance 'example :slot1 "one"))
+;; *EXAMPLE1*
+
+(slot1 *)
+;; => "one"
+
+(slot2 **)
+;; => NIL (instead of unbound slot error)
+~~~
+
+
+### defclass/std options
+
    If you want to change the `:initform` value, you can use the `:std` option:
 ```lisp
 (defclass std-test ()
@@ -48,7 +80,8 @@ A simple class defined with `DEFCLASS/STD` looks like this:
   ((SLOT :ACCESSOR SLOT :INITARG :SLOT :INITFORM 1)))
 ```
 
-   If you want to omit the `:initform` option, you have two ways:
+If you want to omit the `:initform` option, you have two ways:
+
    1. Use `:std :unbound` explicitly
    2. Change the value of `*default-std*`. By default it is set to `T`, so, when the `:std` option is omitted, `:initform` is set to nil. When `*default-std*` is set to nil, `:initform` is omitted when `:std` is omitted.
 ```lisp
@@ -164,6 +197,73 @@ A simple class defined with `DEFCLASS/STD` looks like this:
 (DEFCLASS UNKNOWN ()
   ((SLOT :WRITER SLOT :INITARG :SLOT :INITFORM NIL :KEYWORDS :UNKNOWN)))
 ```
+
+## class/std is even shorter
+
+Usage:
+
+~~~lisp
+(class/std classname slot1 slot2 … slotn)
+~~~
+
+is equivalent to
+
+~~~lisp
+(defclass/std classname ()
+  ((slot1 slot2 … slotn)))
+~~~
+
+is equivalent to
+
+~~~lisp
+(defclass classname ()
+  ((slot1 :accessor slot1 :initarg :slot1 :initform nil)
+   (slot2 :accessor slot2 :initarg :slot2 :initform nil)
+   …
+   (slotn :accessor slotn :initarg :slotn :initform nil)))
+~~~
+
+## print-object/std
+
+Given a class
+
+~~~lisp
+(defclass/std example ()
+  ((slot1 slot2 slot3)))
+~~~
+
+use:
+
+~~~lisp
+(print-object/std example)
+~~~
+
+which expands to
+
+~~~lisp
+(defmethod print-object ((obj example) stream)
+    (print-unreadable-object (obj stream :type t :identity t)
+        (format stream \"~{~a~^ ~}\" (collect-object-slots obj))))
+~~~
+
+Now `example` objects show all their slots' values:
+
+~~~lisp
+(make-instance 'example)
+;; #<EXAMPLE (SLOT1 NIL) (SLOT2 NIL) (SLOT3 NIL) {100ADFFF73}>
+~~~
+
+You can use `print-object/std` independently of `defclass/std`.
+
+Unbound slots show "UNBOUND" (as a string).
+
+See also `printing-unreadably` to select which slots to print:
+
+~~~lisp
+(printing-unreadably (field2 field3) (class/std myclass field1 field2 field3))
+~~~
+
+
 ## Examples
 
 ```lisp
@@ -360,7 +460,8 @@ A simple class defined with `DEFCLASS/STD` looks like this:
   hue saturation xy ct alert effect colormode reachable)
 ```
 
-   There's a shortcut to setup a basic printing behaviour of a class, using `printing-unreadably`:
+   There's a shortcut to setup a basic printing behaviour of a class, using `printing-unreadably`, but see also `print-object/std` for this now.
+
 ```lisp
 (printing-unreadably (field2 field3) (class/std myclass field1 field2 field3))
 

@@ -165,3 +165,42 @@
                         ,@(mapcar (lambda (a1)
                                     `(,a1 ,name))
                                   fields-list)))))))
+
+(defun collect-object-slots (obj)
+  (loop for slot in (sb-mop:class-direct-slots (class-of obj))
+                  for name = (sb-mop:slot-definition-name slot)
+                  for val = (if (slot-boundp obj name)
+                                (slot-value obj name)
+                                "UNBOUND")
+                  collect (list name val)))
+
+(defmacro print-object/std (class)
+  "Define a print-object method for objects of class CLASS.
+
+  Print all slots with their values. Prints \"UNBOUND\", as a string, when slots are unbound.
+
+  Usage:
+
+  (defclass/std test () ((a b)))
+
+  (print-object/std test)
+
+  The macro expands to:
+
+  (DEFMETHOD PRINT-OBJECT ((OBJ TEST) STREAM)
+    (PRINT-UNREADABLE-OBJECT (OBJ STREAM :TYPE T :IDENTITY T)
+        (FORMAT STREAM \"~{~a~^ ~}\" (COLLECT-OBJECT-SLOTS OBJ))))
+"
+  `(defmethod print-object ((obj ,class) stream)
+     (print-unreadable-object (obj stream :type t :identity t)
+       (format stream "~{~a~^ ~}"
+               (collect-object-slots obj)))))
+
+#|
+(defclass/std foo2 ()
+  ((bar baz)))
+
+(defparameter foo2 (make-instance 'foo2))
+
+(print-object/std foo2)
+|#
