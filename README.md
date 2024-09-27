@@ -515,6 +515,28 @@ See also `printing-unreadably` to select which slots to print:
               (FIELD2 MYCLASS) (FIELD3 MYCLASS)))))
 ```
 
+## Limitations
+
+Limitations are in the tools integration.
+
+In Emacs and Slime (and any good editor), when the point is inside a
+class definition, you can press `C-c C-y` (`slime-call-defun`) to send
+a `make-instance` form on the REPL:
+
+~~~lisp
+(defclass test ()
+  (a b)|) ;; <-- | point is here
+~~~
+
+C-c C-y =>
+
+    CL-REPL> (make-instance 'home-package::test |)
+
+This doesn't work inside a `defclass/std` form, you get "not in a function definition".
+
+It's too handy, we'll need a contribution somewhere.
+
+
 ## Dependencies
 This project depends only on [Anaphora](http://common-lisp.net/project/anaphora/) and [Alexandria](https://common-lisp.net/project/alexandria/) libraries. The test package uses the [prove](github.com/fukamachi/prove) test library.
 
