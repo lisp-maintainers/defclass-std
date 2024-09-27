@@ -32,7 +32,7 @@ We provide `defclass/std`, which is close to `defclass`, and
 First, install the library and import the `defclass/std` symbol:
 
 ```lisp
-* (ql:quickload :defclass-std)
+* (ql:quickload :defclass-std)  ;; warn: this fork is not in Quicklisp
 ; => (:DEFCLASS-STD)
 * (import 'defclass-std:defclass/std)
 ; => T
@@ -303,6 +303,18 @@ See also `printing-unreadably` to select which slots to print:
 (printing-unreadably (field2 field3) (class/std myclass field1 field2 field3))
 ~~~
 
+Now what if you want to **remove the print-object method**? You could
+write a basic one instead:
+
+~~~lisp
+(defmethod print-object ((obj example) stream)
+    (print-unreadable-object (obj stream :type t :identity t)
+        ;; (format stream \"~a\" (slot1 obj))
+        ))
+~~~
+
+=> `#<EXAMPLE {1005FC8073}>`.
+
 
 ## Examples
 
@@ -545,6 +557,8 @@ Available on [Quicklisp](http://quicklisp.org):
 ```
 (ql:quickload :defclass-std)
 ```
+
+*warn: this fork is not (yet?) in Quicklisp*
 
 ## Bugs
 If you find any bug or inconsistency in the code, or if you find it too hard to use, please, feel free to open an issue.
