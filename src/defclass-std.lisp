@@ -11,6 +11,7 @@
            #:*default-std*
            #:*with-prefix*
            #:class/std
+           #:define-print-object/std
            #:print-object/std
            #:printing-unreadably)
   (:documentation "Main (and only) project package."))
@@ -211,7 +212,7 @@
                                 "UNBOUND")
                   collect (list name val)))
 
-(defmacro print-object/std (class)
+(defmacro define-print-object/std (class)
   "Define a print-object method for objects of class CLASS.
 
   Print all slots with their values. Prints \"UNBOUND\", as a string, when slots are unbound.
@@ -237,7 +238,11 @@
 (defclass/std foo2 ()
   ((bar baz)))
 
-(defparameter foo2 (make-instance 'foo2))
+(define-print-object/std foo2)
 
-(print-object/std foo2)
+(defparameter foo2 (make-instance 'foo2))
 |#
+
+(defmacro print-object/std (class)
+  "Old name for DEFINE-PRINT-OBJECT/STD."
+  `(define-print-object/std ,class))

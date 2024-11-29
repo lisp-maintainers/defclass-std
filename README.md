@@ -14,13 +14,14 @@ This simple macro atempts to give a very DRY and succint interface to the common
 Everything compiles down to `defclass`.
 
 But with every `defclass` usually comes a `print-object` method. So we
-provide a simple `print-object/std` macro that defines a
+provide a simple `define-print-object/std` macro that defines a
 `print-object` method and prints all the class slots.
 
 **About this fork**:
 
 - the [original project](https://github.com/EuAndreh/defclass-std) by EuAndreh is archived :/
-- added `print-object/std` (<2024-09-27>)
+- added `define-print-object/std` (<2024-09-27>)
+  - (`print-object/std` is the old name, deprecated)
 - added docstrings, organized the README
 
 
@@ -263,7 +264,7 @@ named with the struct name prefix, as `structexample-slot1`.
 and doesn't follow the naming of structs by default.
 
 
-## print-object/std
+## define-print-object/std
 
 Given a class
 
@@ -275,7 +276,7 @@ Given a class
 use:
 
 ~~~lisp
-(print-object/std example)
+(define-print-object/std example)
 ~~~
 
 which expands to
@@ -293,7 +294,7 @@ Now `example` objects show all their slots' values:
 ;; #<EXAMPLE (SLOT1 NIL) (SLOT2 NIL) (SLOT3 NIL) {100ADFFF73}>
 ~~~
 
-You can use `print-object/std` independently of `defclass/std`.
+You can use `define-print-object/std` independently of `defclass/std`.
 
 Unbound slots show "UNBOUND" (as a string).
 
@@ -512,7 +513,7 @@ write a basic one instead:
   hue saturation xy ct alert effect colormode reachable)
 ```
 
-   There's a shortcut to setup a basic printing behaviour of a class, using `printing-unreadably`, but see also `print-object/std` for this now.
+   There's a shortcut to setup a basic printing behaviour of a class, using `printing-unreadably`, but see also `define-print-object/std` for this now.
 
 ```lisp
 (printing-unreadably (field2 field3) (class/std myclass field1 field2 field3))
