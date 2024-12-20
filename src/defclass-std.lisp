@@ -205,8 +205,8 @@
                                   fields-list)))))))
 
 (defun collect-object-slots (obj)
-  (loop for slot in (sb-mop:class-slots (class-of obj))
-                  for name = (sb-mop:slot-definition-name slot)
+  (loop for slot in (closer-mop:class-slots (class-of obj))
+                  for name = (closer-mop:slot-definition-name slot)
                   for val = (if (slot-boundp obj name)
                                 (slot-value obj name)
                                 "UNBOUND")

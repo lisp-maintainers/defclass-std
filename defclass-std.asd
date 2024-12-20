@@ -10,6 +10,7 @@
   :source-control (:git "git@github.com:lisp-maintainers/defclass-std.git")
   :license "LLGPL"
   :depends-on (alexandria
+               closer-mop
                anaphora)
   :components ((:module "src"
                         :components ((:file "defclass-std")))
