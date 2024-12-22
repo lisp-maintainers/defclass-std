@@ -532,6 +532,14 @@ write a basic one instead:
 
 Limitations are in the tools integration.
 
+If you are faced with these limitations and the solution doesn't suit you,
+just transform your
+defclass/std to a regular defclass. You can see the maroexpansion with
+`C-c M` (`slime-macroexpand-1`) and copy-paste the expansion (followed
+by M-x downcase-region …).
+
+### Limitation 1
+
 In Emacs and Slime (and any good editor), when the point is inside a
 class definition, you can press `C-c C-y` (`slime-call-defun`) to send
 a `make-instance` form on the REPL:
@@ -545,19 +553,141 @@ C-c C-y =>
 
     CL-REPL> (make-instance 'home-package::test |)
 
-This doesn't work inside a `defclass/std` form, you get "not in a function definition".
+This doesn't work *by default* inside a `defclass/std` form, you get "not in a function definition". But we can have it.
+
+### Solution 1
+
+We can overwrite 2 Slime functions to have this keybinding back:
+
+```lisp
+;; originally in slime-repl.el
+(defun slime-call-defun ()
+  "Insert a call to the toplevel form defined around point into the REPL."
+  (interactive)
+  (cl-labels ((insert-call
+               (name &key (function t)
+                     defclass)
+               (let* ((setf (and function
+                                 (consp name)
+                                 (= (length name) 2)
+                                 (eql (car name) 'setf)))
+                      (symbol (if setf
+                                  (cadr name)
+                                name))
+                      (qualified-symbol-name
+                       (slime-qualify-cl-symbol-name symbol))
+                      (symbol-name (slime-cl-symbol-name qualified-symbol-name))
+                      (symbol-package (slime-cl-symbol-package
+                                       qualified-symbol-name))
+                      (call (if (cl-equalp (slime-lisp-package) symbol-package)
+                                symbol-name
+                              qualified-symbol-name)))
+                 (slime-switch-to-output-buffer)
+                 (goto-char slime-repl-input-start-mark)
+                 (insert (if function
+                             "("
+                           " "))
+                 (when setf
+                   (insert "setf ("))
+                 (if defclass
+                     (insert "make-instance '"))
+                 (insert call)
+                 (cond (setf
+                        (insert " ")
+                        (save-excursion (insert ") )")))
+                       (function
+                        (insert " ")
+                        (save-excursion (insert ")"))))
+                 (unless function
+                   (goto-char slime-repl-input-start-mark)))))
+    (let ((toplevel (slime-parse-toplevel-form '(:defun :defgeneric :defmacro :define-compiler-macro
+                                                        :defmethod :defparameter :defvar :defconstant :defclass
+                                                        :defclass/std))))  ;; <---- ADDED
+      (if (symbolp toplevel)
+          (error "Not in a function definition")
+        (slime-dcase toplevel
+          (((:defun :defgeneric :defmacro :define-compiler-macro) symbol)
+           (insert-call symbol))
+          ((:defmethod symbol &rest args)
+           (declare (ignore args))
+           (insert-call symbol))
+          (((:defparameter :defvar :defconstant) symbol)
+           (insert-call symbol :function nil))
+          (((:defclass) symbol)
+           (insert-call symbol :defclass t))
+          (((:defclass/std) symbol)               ;; <----------- ADDED
+           (insert-call symbol :defclass t))
+          (t
+           (error "Not in a function definition")))))))
+```
+
+and
+
+```lisp
+;; originally in slime-parse.el
+(defun slime-parse-context (name)
+  (save-excursion
+    (cond ((slime-in-expression-p '(defun *))          `(:defun ,name))
+          ((slime-in-expression-p '(defmacro *))       `(:defmacro ,name))
+          ((slime-in-expression-p '(defgeneric *))     `(:defgeneric ,name))
+          ((slime-in-expression-p '(setf *))
+           ;;a setf-definition, but which?
+           (backward-up-list 1)
+           (slime-parse-context `(setf ,name)))
+          ((slime-in-expression-p '(defmethod *))
+           (unless (looking-at "\\s ")
+             (forward-sexp 1)) ; skip over the methodname
+           (let (qualifiers arglist)
+             (cl-loop for e = (read (current-buffer))
+                      until (listp e) do (push e qualifiers)
+                      finally (setq arglist e))
+             `(:defmethod ,name ,@qualifiers
+                          ,(slime-arglist-specializers arglist))))
+          ((and (symbolp name)
+                (slime-in-expression-p `(,name)))
+           ;; looks like a regular call
+           (let ((toplevel (ignore-errors (slime-parse-toplevel-form))))
+             (cond ((slime-in-expression-p `(setf (*)))  ;a setf-call
+                    (if toplevel
+                        `(:call ,toplevel (setf ,name))
+                      `(setf ,name)))
+                   ((not toplevel)
+                    name)
+                   ((slime-in-expression-p `(labels ((*))))
+                    `(:labels ,toplevel ,name))
+                   ((slime-in-expression-p `(flet ((*))))
+                    `(:flet ,toplevel ,name))
+                   (t
+                    `(:call ,toplevel ,name)))))
+          ((slime-in-expression-p '(define-compiler-macro *))
+           `(:define-compiler-macro ,name))
+          ((slime-in-expression-p '(define-modify-macro *))
+           `(:define-modify-macro ,name))
+          ((slime-in-expression-p '(define-setf-expander *))
+           `(:define-setf-expander ,name))
+          ((slime-in-expression-p '(defsetf *))
+           `(:defsetf ,name))
+          ((slime-in-expression-p '(defvar *))       `(:defvar ,name))
+          ((slime-in-expression-p '(defparameter *)) `(:defparameter ,name))
+          ((slime-in-expression-p '(defconstant *))  `(:defconstant ,name))
+          ((slime-in-expression-p '(defclass *))     `(:defclass ,name))
+          ((slime-in-expression-p '(defclass/std *)) `(:defclass ,name)) ;; <-- ADDED
+          ((slime-in-expression-p '(defpackage *))   `(:defpackage ,name))
+          ((slime-in-expression-p '(defstruct *))
+           `(:defstruct ,(if (consp name)
+                             (car name)
+                           name)))
+          (t
+           name))))
+```
+
+
+### ~~Limitation 2~~
 
 Likewise, when the point is on a class name, we can call `M-x
 slime-export-class`. This adds the class name and all the
 accessors/readers/writers symbols to the `:export` clause of your
-package. It doesn't work with a `defclass/std` form.
-
-Those are too handy, we'll need a contribution somewhere.
-
-Or, whenever faced with these limitations, just transform your
-defclass/std to a regular defclass. You can see the maroexpansion with
-`C-c M` (`slime-macroexpand-1`) and copy-paste the expansion (followed
-by M-x downcase-region …).
+package. ~~It doesn't work with a `defclass/std` form.~~ It just works actually.
 
 
 ## Dependencies
